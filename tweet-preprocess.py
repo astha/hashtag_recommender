@@ -1,8 +1,8 @@
 import re
 import operator
 import numpy as np
-from nltk.stem.snowball import SnowballStemmer
-stemmer = SnowballStemmer("english")
+# from nltk.stem.snowball import SnowballStemmer
+# stemmer = SnowballStemmer("english")
 
 stopWords=[]
 stopWordListFileName="stopwords.txt"
@@ -184,7 +184,7 @@ hashtags = hashtag_map.keys()
 for tag in hashtags:  
     hashtag_to_word[tag].extend([0]*(word_count-len(hashtag_to_word[tag])))
 
-fp = open("here", 'r')
+fp = open("tweets", 'r')
 total_hashtags = sum(list(hashtag_freq.values()))
 for feature in num_features: 
     line = fp.readline()
