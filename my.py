@@ -5,10 +5,10 @@ from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 # from nltk.stem.snowball import SnowballStemmer
 # stemmer = SnowballStemmer("english")
 
-vocabulary = {}
-featureVectors = []
-testFeatureVectors = []
+
 processedHashTags = []
+processedTweets=[]
+
 stopWords=[]
 stopWordListFileName="stopwords.txt"
 def getStopWords():
@@ -136,8 +136,8 @@ def createTFFeatureVectors(features):
 
 # tfidf feature vector
 def createTFIDFFeatureVectors(features):
+	print features[1:10]
 	vectorizer = CountVectorizer()
-	
 	textFeatures = [' '.join(feature) for feature in features]
 	tf_features = vectorizer.fit_transform(textFeatures).toarray()
 	vocabulary = vectorizer.vocabulary_
@@ -164,7 +164,7 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 	initialize()
 	hashtagFile = open(hashtagFileName,'w')
 	wordsFile = open(wordsFileName,'w')
-	global vocabulary, featureVectors, testFeatureVectors, processedHashTags
+	global processedHashTags, processedTweets
 	processedTweets = [];
 	processedHashTags = [];
 	for tweet in tweetArray:
@@ -174,52 +174,76 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 			continue
 		feature = getFeatures(processedTweet)
 		hashtagList = retrieveHashTags(processedTweet)
-		hashtagFile.write(str(hashtagList)+"\n")
-		wordsFile.write(str(feature)+"\n")
-
+		# hashtagFile.write(str(hashtagList)+"\n")
+		# wordsFile.write(str(feature)+"\n")
 		processedHashTags.append(hashtagList)
-		processedTweets.append(feature)
-	featureVectors, vocabulary = createTFIDFFeatureVectors(processedTweets)
-	# print processedTweets
-	# print vocabulary
-	# print featureVectors
-	
+		processedTweets.append(feature)	
 	hashtagFile.close()
 	wordsFile.close()
 
-preProcessAllTweets(tarr,"h.txt","w.txt")
 
-# fp = open("tweets", 'r')
-# testTweets = fp.readlines()
-# # change the threshold later
-# relevanceThreshold = 0
 
-# print vocabulary
-# for testTweet in testTweets:
-# 	processedTestTweet = getFeatures(processTweet(testTweet))
-# 	print("\n--------------------\n")
-# 	print testTweet
-# 	tweetNumber = 0
-# 	closenessScores = {}
-# 	for tweet in featureVectors:
-# 		score = 0
-# 		for word in processedTestTweet:
-# 			if word in vocabulary:
-# 				score = score + tweet[vocabulary[word]]
-# 		if score > relevanceThreshold:
-# 			closenessScores[tweetNumber] = score
-# 		tweetNumber = tweetNumber + 1
-# 	# take top 5 tweets as the most relevant tweets
-# 	relevantTweets = sorted(closenessScores.iteritems(), key=operator.itemgetter(1), reverse=True)[:5]
-# 	# print relevantTweets
-# 	relevantTags = [processedHashTags[index] for (index,score) in relevantTweets]
-# 	relevantTags = [item for sublist in relevantTags for item in sublist]
-# 	# take first 5 hashtags without changing the order
-# 	tempHashtagSet = set()
-# 	finalTags = []
-# 	for tag in relevantTags:
-# 		if tag not in tempHashtagSet:
-# 			tempHashtagSet.add(tag)
-# 			finalTags.append(tag)
-# 	print finalTags[:5]
 
+
+
+
+def test(processedHashTags, processedTweets, testTweets):
+	featureVectors, vocabulary = createTFIDFFeatureVectors(processedTweets)
+
+	relevanceThreshold = 0
+	for processedTestTweet in testTweets:
+		print("\n--------------------\n")
+		print processedTestTweet
+		tweetNumber = 0
+		closenessScores = {}
+		for tweet in featureVectors:
+			score = 0
+			for word in processedTestTweet:
+				if word in vocabulary:
+					score = score + tweet[vocabulary[word]]
+			if score > relevanceThreshold:
+				closenessScores[tweetNumber] = score
+			tweetNumber = tweetNumber + 1
+		# take top 5 tweets as the most relevant tweets
+		relevantTweets = sorted(closenessScores.iteritems(), key=operator.itemgetter(1), reverse=True)[:5]
+		# print relevantTweets
+		relevantTags = [processedHashTags[index] for (index,score) in relevantTweets]
+		relevantTags = [item for sublist in relevantTags for item in sublist]
+		# take first 5 hashtags without changing the order
+		tempHashtagSet = set()
+		finalTags = []
+		for tag in relevantTags:
+			if tag not in tempHashtagSet:
+				tempHashtagSet.add(tag)
+				finalTags.append(tag)
+		print finalTags[:5]
+
+
+
+
+def fiveFoldValidation():
+	preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
+	trainingHashTags=[]
+	trainingTweets = []
+	testTweets = []
+	total = len(processedTweets)
+
+	for i in range(0,2):
+		j=i
+		for count in range(0,4):
+
+			for ele in processedTweets[int(j*0.2*total): int((j+1)*0.2*total)]:
+				trainingTweets.append(ele)
+			for ele in processedHashTags[int(j*0.2*total): int((j+1)*0.2*total)]:
+				trainingHashTags.append(ele)
+			j = (j+1)%5
+
+		j = (i-1)%5
+		for ele in processedTweets[int(j*0.2*total): int((j+1)*0.2*total)]:
+			testTweets.append(ele)
+
+		test(trainingHashTags, trainingTweets, testTweets)
+
+
+
+fiveFoldValidation()
