@@ -1,6 +1,5 @@
 import nltk
 import operator
-from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 import copy
 from common_functions import *
 
