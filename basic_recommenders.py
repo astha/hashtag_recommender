@@ -5,12 +5,14 @@ from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 import copy
 import sys
 
+space=" "
+endl = "\n"
 
 from common_functions import *
 from naive_bayes import *
 # from nltk.stem.snowball import SnowballStemmer
 # stemmer = SnowballStemmer("english")
-endl = "\n"
+
 
 processedHashTags = []
 processedTweets = []
@@ -33,7 +35,7 @@ def createPresenceFeatureVectors(features):
 def createTFFeatureVectors(features):
 	vectorizer = CountVectorizer()
 	textFeatures = [' '.join(feature) for feature in features]
-	return vectorizer.fit_transform(textFeatures).toarray(), vectorizer.vocabulary
+	return vectorizer.fit_transform(textFeatures).toarray(), vectorizer.vocabulary_
 
 # tfidf feature vector
 def createTFIDFFeatureVectors(features):
@@ -57,7 +59,7 @@ while line:
 fp.close()
 
 def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
-	print "Pre Processing Begins...", endl
+	# print "Pre Processing Begins...", endl
 	initialize()
 	hashtagFile = open(hashtagFileName,'w')
 	wordsFile = open(wordsFileName,'w')
@@ -78,10 +80,10 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 		processedTweets.append(feature)	
 	hashtagFile.close()
 	wordsFile.close()
-	print "Pre Processing ends..", endl
+	# print "Pre Processing ends..", endl
 
 
-def singhamClassifier(processedHashTags, processedTweets, testTweets, 
+def singhamClassifier(processedHashTags, processedTweets, testTweets, testHashtags,
 						rankApproach, featureVecApproach, k):
 
 	featureVectors=[]
@@ -98,10 +100,11 @@ def singhamClassifier(processedHashTags, processedTweets, testTweets,
 		exit(0)
 
 	relevanceThreshold = 0
-	finalTagList = []
-	for processedTestTweet in testTweets:
-		print("\n--------------------\n")
-		print processedTestTweet
+	recommendationScore = 0
+	for i in range(len(testTweets)):
+		processedTestTweet = testTweets[i]
+		# print("\n--------------------\n")
+		# print processedTestTweet
 		tweetNumber = 0
 		closenessScores = {}
 		for tweet in featureVectors:
@@ -128,9 +131,9 @@ def singhamClassifier(processedHashTags, processedTweets, testTweets,
 				hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
 				finalTags = globalFrequencyRanking(relevantTags,hashtagFreqMap, k)
 
-		print finalTags
-		finalTagList.append(finalTags)
-	return finalTagList
+		recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
+		# print finalTags
+	return float(recommendationScore * 100)/len(testHashtags)
 	
 # Ranking methods 
 
@@ -173,21 +176,23 @@ def compareHashtagsForTweet(actualTweetHashtags, recommendedTweetHashtags):
 
 def recommendationScore(actualHashtags, recommendedHashtags):
 	count = 0
-	print len(actualHashtags), len(recommendedHashtags)
+	# print len(actualHashtags), len(recommendedHashtags)
 	for i in range(len(actualHashtags)):
 		count += compareHashtagsForTweet(actualHashtags[i], recommendedHashtags[i])
 	return float(count) * 100 / len(actualHashtags)
 
 def fiveFoldValidation():
 	preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
-	trainingHashTags=[]
-	trainingTweets = []
-	testTweets = []
-	testHashtags = []
+	
 	total = len(processedTweets)
 
-	for i in range(0,1):
+	scoreList = []
+	for i in range(0,5):
 		j=i
+		trainingTweets=[]
+		trainingHashTags=[]
+		testTweets = []
+		testHashtags = []
 		for count in range(0,4):
 
 			for ele in processedTweets[int(j*0.2*total): int((j+1)*0.2*total)]:
@@ -202,12 +207,13 @@ def fiveFoldValidation():
 		for ele in processedHashTags[int(j*0.2*total): int((j+1)*0.2*total)]:
 			testHashtags.append(ele)
 
-		# naiveBayesClassifier(trainingHashTags, trainingTweets, testTweets)
-		rankApproach=1
-		featureVecApproach="presence"
-		k=5
-		recommendedHashtags = singhamClassifier(trainingHashTags, trainingTweets, testTweets, rankApproach, featureVecApproach, k)
-		print recommendationScore(testHashtags, recommendedHashtags)
-		# naiveBayesRecommender(processedTweets, processedHashTags, testTweets, 5)
+		featureVecApproach = str(sys.argv[2])
+		rankApproach = int(sys.argv[3])
+		k = int(sys.argv[4])
+		recommendationScore = singhamClassifier(trainingHashTags, trainingTweets, testTweets, testHashtags,rankApproach, featureVecApproach, k)
+		scoreList.append(recommendationScore)
+		# print recommendationScore
+	print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
+	# print scoreList
 
 fiveFoldValidation()
