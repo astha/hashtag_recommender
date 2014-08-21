@@ -3,9 +3,10 @@ import nltk
 import operator
 from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 import copy
+import sys
 # from nltk.stem.snowball import SnowballStemmer
 # stemmer = SnowballStemmer("english")
-
+endl = "\n"
 
 processedHashTags = []
 processedTweets = []
@@ -104,6 +105,7 @@ def getFeatures(tweet):
 	return featureVector
 
 def getVocabulary(features):
+	print "getVocabulary()", endl
 	vocabulary = dict()
 	vocabCount = 0
 	for feature in features:
@@ -114,6 +116,7 @@ def getVocabulary(features):
 	return vocabulary
 
 def getWordFrequency(features):
+	print "getWordFrequency()..", endl
 	wordFreqMap = dict()
 	for feature in features:
 		for word in feature:
@@ -166,7 +169,8 @@ def initialize():
 	slangDict = readSlangDictionary()
 
 tarr = []
-fp = open("tweets", 'r')
+filename = sys.argv[1]
+fp = open(filename, 'r')
 line = fp.readline()
 while line:
 	tarr.append(line)
@@ -174,6 +178,7 @@ while line:
 fp.close()
 
 def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
+	print "Pre Processing Begins...", endl
 	initialize()
 	hashtagFile = open(hashtagFileName,'w')
 	wordsFile = open(wordsFileName,'w')
@@ -194,8 +199,10 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 		processedTweets.append(feature)	
 	hashtagFile.close()
 	wordsFile.close()
+	print "Pre Processing ends..", endl
 
 def calculateHashtagFrequency(processedHashTags):
+	print "hashtag frequency\n"
 	hashtagFreqMap = {}
 	for hashtagList in processedHashTags:
 		for hashEle in hashtagList:
@@ -322,6 +329,7 @@ def naiveBayesClassifier(processedHashTags, processedTweets, testTweets):
 		print "\n--------------------\n"
 
 def hashTagMaps(processedTweets, processedHashTags):
+	print "hashTag maps ", endl
 	hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
 	hashtagToWordFreq = {}
 	vocabulary = getVocabulary(processedTweets)
