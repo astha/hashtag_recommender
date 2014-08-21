@@ -148,7 +148,7 @@ fp.close()
 
 num_features = []
 
-def createNaiveBayesFeatureVectors():
+
     
 
 def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):

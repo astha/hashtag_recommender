@@ -105,12 +105,23 @@ def getFeatures(tweet):
 
 def getVocabulary(features):
 	vocabulary = dict()
+	vocabCount = 0
 	for feature in features:
 		for word in feature:
 			if not word in vocabulary.keys():
-				vocabulary[word] = 0
+				vocabulary[word] = vocabCount
+				vocabCount += 1
 	return vocabulary
 
+def getWordFrequency(features):
+	wordFreqMap = dict()
+	for feature in features:
+		for word in feature:
+			if wordFreqMap.has_key(word):
+				wordFreqMap[word] += 1
+			else:
+				wordFreqMap[word] = 1
+	return wordFreqMap
 
 # presence feature vector
 def createPresenceFeatureVectors(features):
@@ -269,6 +280,8 @@ def createNaiveBayesFeatureVector(feature, featureVector):
 
 def naiveBayesClassifier(processedHashTags, processedTweets, testTweets):
 	vocabulary = getVocabulary(processedTweets)
+	for key,value in vocabulary.items():
+		vocabulary[key] = 0
 
 	train = []
 	test = []
@@ -308,6 +321,63 @@ def naiveBayesClassifier(processedHashTags, processedTweets, testTweets):
 		
 		print "\n--------------------\n"
 
+def hashTagMaps(processedTweets, processedHashTags):
+	hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
+	hashtagToWordFreq = {}
+	vocabulary = getVocabulary(processedTweets)
+	vocabularyCount = len(vocabulary.keys())
+	for i in range(len(processedHashTags)):
+		hashtagList = processedHashTags[i]
+		for hashtag in hashtagList:
+			if not hashtagToWordFreq.has_key(hashtag):
+				hashtagToWordFreq[hashtag] = [0]*vocabularyCount
+			for word in set(processedTweets[i]):
+				hashtagToWordFreq[hashtag][vocabulary[word]] += 1
+	return hashtagFreqMap, hashtagToWordFreq
+
+def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, k):
+	hashtagFreqMap, hashtagToWordFreq = hashTagMaps(processedTweets, processedHashTags)
+	wordFreqMap = getWordFrequency(processedTweets)
+	vocabulary = getVocabulary(processedTweets)
+	vocabSize = len(vocabulary.keys())
+	totalFreq = sum(hashtagFreqMap.values())
+	totalVocabFreq = sum(wordFreqMap.values())
+	smoothingFactor = 0.001
+	vocabSet = set(vocabulary.keys())
+
+
+	vocabulary = getVocabulary(processedTweets)
+	for testFeature in testTweets:
+		featureVector = [0]*vocabSize
+		hashtagProbMap = {}
+		restWords = vocabSet - set(testFeature)
+		for tag in hashtagFreqMap.keys():
+			hashtagProbMap[tag] = float(hashtagFreqMap[tag])/totalFreq #Prior Probability
+			for word in testFeature:
+				if hashtagProbMap[tag] ==  0:
+					print word
+					exit(0)
+				if vocabulary.has_key(word):
+					freq = hashtagToWordFreq[tag][vocabulary[word]]
+					if freq != 0:
+						hashtagProbMap[tag] *= float(freq) / hashtagFreqMap[tag]
+					else:
+						hashtagProbMap[tag] *=  float(wordFreqMap[word]) / totalVocabFreq
+			
+			for word in restWords:
+				freq = hashtagToWordFreq[tag][vocabulary[word]]
+				if freq / hashtagFreqMap[tag] == 1:
+					hashtagProbMap[tag] *= smoothingFactor
+				else:
+					hashtagProbMap[tag] *= (1 - (float(freq) / hashtagFreqMap[tag]))
+
+		topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
+		finalTags = [tag for tag,prob in reversed(topKpairs)]
+		print testFeature
+		print [(tag,str(prob)) for tag,prob in reversed(topKpairs)]
+		print "-------------------\n"
+
+
 def fiveFoldValidation():
 	preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
 	trainingHashTags=[]
@@ -331,6 +401,7 @@ def fiveFoldValidation():
 
 		testTweets = processedTweets[int(0*0.2*total): int(1*0.2*total)]
 		# naiveBayesClassifier(trainingHashTags, trainingTweets, testTweets)
-		test(trainingHashTags, trainingTweets, testTweets)
+		# test(trainingHashTags, trainingTweets, testTweets)
+		naiveBayesRecommender(processedTweets, processedHashTags, testTweets, 5)
 
 fiveFoldValidation()
