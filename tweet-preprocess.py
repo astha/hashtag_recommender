@@ -148,6 +148,9 @@ fp.close()
 
 num_features = []
 
+def createNaiveBayesFeatureVectors():
+    
+
 def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
     initialize()
     global num_features, word_count
@@ -158,6 +161,7 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
         processedTweet = processTweet(tweet)
         hashTags = retrieveHashTags(processedTweet)
         featureVector = getFeatureVector(processedTweet)
+
         addToWordMap(featureVector)
         addToHashtagMap(hashTags)
         new_feature = [0] * word_count
