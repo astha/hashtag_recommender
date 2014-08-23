@@ -143,3 +143,9 @@ def initialize():
   stopWords = getStopWords()
   global slangDict
   slangDict = readSlangDictionary()
+
+def compareHashtagsForTweet(actualTweetHashtags, recommendedTweetHashtags):
+  if len(set(actualTweetHashtags) & set(recommendedTweetHashtags)):
+    return True 
+  else:
+    return False

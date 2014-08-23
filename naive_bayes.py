@@ -4,7 +4,7 @@ import copy
 from common_functions import *
 
 # Naive Bayes Self Implementation
-def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, k):
+def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHashtags,k):
   hashtagFreqMap, hashtagToWordFreq = hashTagMaps(processedTweets, processedHashTags)
   wordFreqMap = getWordFrequency(processedTweets)
   vocabulary = getVocabulary(processedTweets)
@@ -16,7 +16,9 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, k):
 
 
   vocabulary = getVocabulary(processedTweets)
-  for testFeature in testTweets:
+  recommendationScore = 0
+  for i in range(len(testTweets)):
+    testFeature = testTweets[i]
     featureVector = [0]*vocabSize
     hashtagProbMap = {}
     restWords = vocabSet - set(testFeature)
@@ -42,9 +44,11 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, k):
 
     topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
     finalTags = [tag for tag,prob in reversed(topKpairs)]
-    print testFeature
-    print [(tag,str(prob)) for tag,prob in reversed(topKpairs)]
-    print "-------------------\n"
+    # print testFeature
+    # print [(tag,str(prob)) for tag,prob in reversed(topKpairs)]
+    # print "-------------------\n"
+    recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
+  return float(recommendationScore * 100)/len(testHashtags)
 
 
 

@@ -83,7 +83,7 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 	# print "Pre Processing ends..", endl
 
 
-def singhamClassifier(processedHashTags, processedTweets, testTweets, testHashtags,
+def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashtags,
 						rankApproach, featureVecApproach, k):
 
 	featureVectors=[]
@@ -189,6 +189,7 @@ def fiveFoldValidation():
 	scoreList = []
 	for i in range(0,5):
 		j=i
+		print j
 		trainingTweets=[]
 		trainingHashTags=[]
 		testTweets = []
@@ -207,13 +208,20 @@ def fiveFoldValidation():
 		for ele in processedHashTags[int(j*0.2*total): int((j+1)*0.2*total)]:
 			testHashtags.append(ele)
 
-		featureVecApproach = str(sys.argv[2])
-		rankApproach = int(sys.argv[3])
-		k = int(sys.argv[4])
-		recommendationScore = singhamClassifier(trainingHashTags, trainingTweets, testTweets, testHashtags,rankApproach, featureVecApproach, k)
+	#/* Following for Singham classifier
+		# featureVecApproach = str(sys.argv[2])
+		# rankApproach = int(sys.argv[3])
+		# k = int(sys.argv[4])
+		# recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
+	#*/
+
+	#/* Following for Naive Bayes
+		k = int(sys.argv[2])
+		recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
+	#*/
 		scoreList.append(recommendationScore)
-		# print recommendationScore
-	print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
-	# print scoreList
+	
+	# print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
+	print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
 
 fiveFoldValidation()
