@@ -13,7 +13,6 @@ from naive_bayes import *
 # from nltk.stem.snowball import SnowballStemmer
 # stemmer = SnowballStemmer("english")
 
-
 processedHashTags = []
 processedTweets = []
 
@@ -45,8 +44,6 @@ def createTFIDFFeatureVectors(features):
 	transformer = TfidfTransformer()
 	tfidf_features = transformer.fit_transform(tf_features).toarray()
 	return tfidf_features,vocabulary
-
-
 
 tarr = []
 filename = sys.argv[1]
@@ -168,14 +165,6 @@ def globalFrequencyRanking(relevantTags, hashtagFreqMap, k):
 	sortedTags = sorted(freqMap.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
 	return [ tag for tag,freq in sortedTags]
 
-def compareHashtagsForTweet(actualTweetHashtags, recommendedTweetHashtags):
-	if len(set(actualTweetHashtags) & set(recommendedTweetHashtags)):
-		return True 
-	else:
-		return False
-
-
-
 rankRecommendationMap=[]
 def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 	global rankRecommendationMap
@@ -185,14 +174,8 @@ def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 		else:
 			rankRecommendationMap[len(rankRecommendationMap)-1] += 1
 
-
-
-
-def fiveFoldValidation():
-	preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
-	
+def fiveFoldValidation():	
 	total = len(processedTweets)
-
 	scoreList = []
 	for i in range(0,5):
 		j=i
@@ -234,4 +217,7 @@ def fiveFoldValidation():
 	# print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
 	print rankRecommendationMap
 
+preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
+# hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
+# plotHashtagFreqDistribution(hashtagFreqMap)
 fiveFoldValidation()

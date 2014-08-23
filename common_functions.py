@@ -1,4 +1,7 @@
 import re
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 stopWordListFileName="stopwords.txt"
 slangDictFileName = "slangDict.txt"
@@ -149,3 +152,40 @@ def compareHashtagsForTweet(actualTweetHashtags, recommendedTweetHashtags):
     return True 
   else:
     return False
+
+def plotHashtagFreqDistribution(hashtagFreqMap):
+  x_axis = [x+1 for x in range(25)]
+  y_axis = [0] * 25
+  total_hashtags = sum(hashtagFreqMap.values())
+  num_hashtags = len(hashtagFreqMap.keys())
+  for key in hashtagFreqMap.keys():
+    if hashtagFreqMap[key] <= 25:
+      y_axis[hashtagFreqMap[key] - 1] += 1
+
+  fig, ax1 = plt.subplots()
+  title = 'Number of Hashtags v/s Number of Hashtag Occurences\n'
+  title += 'Total HashTags = ' + str(total_hashtags) + ', '
+  title += 'Different Hashtags = ' + str(num_hashtags)
+  plt.suptitle(title)
+  plt.xlabel("Hashtag Occurence")
+  ax1.set_ylabel("Number of Hashtags")
+  ax1.plot(x_axis, y_axis, marker='o', color='g')
+  ax1.plot(x_axis, y_axis, color='g')
+  for tl in ax1.get_yticklabels():
+    tl.set_color('g')
+
+  ax2 = ax1.twinx()
+  y_axis = np.cumsum(y_axis)
+  ax2.set_ylabel('Cumulative Occurence')
+  ax2.plot(x_axis, y_axis, marker='o', color='b')
+  ax2.plot(x_axis, y_axis, color='b')
+  for tl in ax2.get_yticklabels():
+    tl.set_color('b')
+  plt.grid()
+  plt.savefig("hashtag_freq.png")
+  plt.clf()
+
+  # freqMap[hashtagFreqMap[key]] += 1
+  # print [(key, num) for key,num in astha]
+  # print freqMap
+  # exit(0)
