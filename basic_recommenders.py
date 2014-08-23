@@ -17,7 +17,6 @@ from naive_bayes import *
 processedHashTags = []
 processedTweets = []
 
-
 # presence feature vector
 def createPresenceFeatureVectors(features):
 	vocabulary = getVocabulary(features)
@@ -61,8 +60,8 @@ fp.close()
 def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 	# print "Pre Processing Begins...", endl
 	initialize()
-	hashtagFile = open(hashtagFileName,'w')
-	wordsFile = open(wordsFileName,'w')
+	# hashtagFile = open(hashtagFileName,'w')
+	# wordsFile = open(wordsFileName,'w')
 	global processedHashTags, processedTweets
 	processedTweets = [];
 	processedHashTags = [];
@@ -78,8 +77,8 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 
 		processedHashTags.append(hashtagList)
 		processedTweets.append(feature)	
-	hashtagFile.close()
-	wordsFile.close()
+	# hashtagFile.close()
+	# wordsFile.close()
 	# print "Pre Processing ends..", endl
 
 
@@ -131,9 +130,10 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 				hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
 				finalTags = globalFrequencyRanking(relevantTags,hashtagFreqMap, k)
 
-		recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
-		# print finalTags
-	return float(recommendationScore * 100)/len(testHashtags)
+		# recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
+		rankRecommendation(testHashtags[i], finalTags) # updates rank recommendation map
+	# return float(recommendationScore * 100)/len(testHashtags)
+	return 0
 	
 # Ranking methods 
 
@@ -174,12 +174,19 @@ def compareHashtagsForTweet(actualTweetHashtags, recommendedTweetHashtags):
 	else:
 		return False
 
-def recommendationScore(actualHashtags, recommendedHashtags):
-	count = 0
-	# print len(actualHashtags), len(recommendedHashtags)
-	for i in range(len(actualHashtags)):
-		count += compareHashtagsForTweet(actualHashtags[i], recommendedHashtags[i])
-	return float(count) * 100 / len(actualHashtags)
+
+
+rankRecommendationMap=[]
+def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
+	global rankRecommendationMap
+	for tag in actualTweetHashtags:
+		if tag in recommendedTweetHashtags:
+			rankRecommendationMap[recommendedTweetHashtags.index(tag)+1] += 1
+		else:
+			rankRecommendationMap[len(rankRecommendationMap)-1] += 1
+
+
+
 
 def fiveFoldValidation():
 	preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
@@ -209,19 +216,22 @@ def fiveFoldValidation():
 			testHashtags.append(ele)
 
 	#/* Following for Singham classifier
-		# featureVecApproach = str(sys.argv[2])
-		# rankApproach = int(sys.argv[3])
-		# k = int(sys.argv[4])
-		# recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
+		featureVecApproach = str(sys.argv[2])
+		rankApproach = int(sys.argv[3])
+		k = int(sys.argv[4])
+		global rankRecommendationMap
+		rankRecommendationMap=[0]*(k+2)
+		recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
 	#*/
 
 	#/* Following for Naive Bayes
-		k = int(sys.argv[2])
-		recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
+		# k = int(sys.argv[2])
+		# recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
 	#*/
 		scoreList.append(recommendationScore)
 	
 	# print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
-	print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
+	# print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
+	print rankRecommendationMap
 
 fiveFoldValidation()
