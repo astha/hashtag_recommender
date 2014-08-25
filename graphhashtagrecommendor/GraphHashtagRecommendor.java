@@ -11,19 +11,21 @@ seperated by |","| time format : seconds since epoch
 package graphhashtagrecommendor;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.StringTokenizer;
+import java.util.Set;
 
 /**
  *
@@ -31,9 +33,11 @@ import java.util.StringTokenizer;
  */
 public class GraphHashtagRecommendor {
     static ArrayList <TweetPair> fullTweets = new ArrayList<TweetPair>();
+    static ArrayList<String> fullHashtags = new ArrayList<String>();
     static List<List<String>> tweets = new ArrayList<List<String>>();
     static Map<String, Integer> indexMap = new HashMap<String, Integer>();
     static Map<Integer, String> reverseIndexMap = new HashMap<Integer, String>();
+    static Set<Integer> isHashtag = new HashSet<Integer>();
     static Map<String, Integer> IDF = new HashMap<String, Integer>();
 
     static UndirectedGraph tweetGraph;
@@ -41,16 +45,16 @@ public class GraphHashtagRecommendor {
     
     static float filterThreshold;
     static int bfsThreshold;
+    static int topKHashtags;
     
     static void filterTweets(){
         int N;
         N = fullTweets.size();
         System.out.println(N+" is the size of fulltweets");
-        StringTokenizer st;
+        String[] tweetWords;
         for(TweetPair tp:fullTweets){
-            st = new StringTokenizer(tp.tweet);
-            while (st.hasMoreElements()) {
-                String token = st.nextElement().toString().toLowerCase();
+            tweetWords = tp.tweet.split(" ");
+            for(String token: tweetWords){
                 if(IDF.containsKey(token)){
                     IDF.put(token, IDF.get(token)+1);
                 }else{
@@ -58,12 +62,13 @@ public class GraphHashtagRecommendor {
                 }
             }
         }
+        
         float factor;
         for(TweetPair tp:fullTweets){
-            st = new StringTokenizer(tp.tweet);
             List<String>s=new ArrayList<String>();
-            while (st.hasMoreElements()) {
-                String token = st.nextElement().toString().toLowerCase();
+            
+            tweetWords = tp.tweet.split(" ");
+            for(String token: tweetWords){
                 factor = (float)N/IDF.get(token);
                 if(factor >= filterThreshold){
                     s.add(token);
@@ -82,6 +87,7 @@ public class GraphHashtagRecommendor {
                 if(!indexMap.containsKey(s)){
                     indexMap.put(s,index);
                     reverseIndexMap.put(index,s);
+                    if(s.charAt(0) == '#') isHashtag.add(index);
                     index++;
                 }
             }
@@ -110,7 +116,7 @@ public class GraphHashtagRecommendor {
                 }
             }
         }
-        System.out.println("Intex of Kindle2 is :"+indexMap.get("kindle2"));
+        // System.out.println("Intex of Kindle2 is :"+indexMap.get("kindle2"));
         
         tweetGraph.normalize();
         /*
@@ -130,61 +136,90 @@ public class GraphHashtagRecommendor {
      
     }
     
+    // Use heap to make it fast
+    // http://www.michaelpollmeier.com/selecting-top-k-items-from-a-list-efficiently-in-java-groovy/
+    static ArrayList<Integer> sortByValue(Map<Integer, Double> map) {
+        LinkedList<Map.Entry<Integer,Double>> list = new LinkedList(map.entrySet());
+        Collections.sort(list, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return ((Comparable) ((Map.Entry<Integer,Double>) (o2)).getValue())
+                        .compareTo(((Map.Entry<Integer,Double>) (o1)).getValue());
+            }
+        });
+
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            Map.Entry<Integer,Double> entry = (Map.Entry<Integer,Double>)it.next();
+            result.add(entry.getKey());
+        }
+        return result;
+    }
+    
+    static HashMap<Integer,Double> filterScoresForHashtags(HashMap<Integer,Double> scores){
+        HashMap<Integer,Double> hashtagScores = new HashMap<Integer,Double>();
+        for(Map.Entry<Integer,Double>entry: scores.entrySet()){
+            if(isHashtag.contains(entry.getKey())){
+                hashtagScores.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return hashtagScores;
+    }
+    
     static void giveHashTags(String tw){
-        tw = tw.replaceAll("\\.", " ");
-        StringTokenizer st;
-        st = new StringTokenizer(tw);
+        String[] tweetWords = tw.split(" ");
         HashMap<Integer,Double> myScore = new HashMap<Integer,Double>();
-        while (st.hasMoreElements()) {
-            String token = st.nextElement().toString().toLowerCase();
+        for (String token: tweetWords) {
             if(indexMap.containsKey(token)){
-                System.out.println("token is "+token);
                 tweetGraph.scoreTerm(indexMap.get(token),myScore,bfsThreshold);
             }
         }
-        System.out.println(myScore.size());
-        Double maxScore = -1.0;
-        Integer maxIndex = -1;
-        for(Map.Entry<Integer,Double>entry:myScore.entrySet()){
-            if(entry.getValue() > maxScore){
-                maxScore = entry.getValue();
-                maxIndex = entry.getKey();
-            }
-        }
-        System.out.println("Most apt hashtag is : "+reverseIndexMap.get(maxIndex));
+        myScore = filterScoresForHashtags(myScore);
+        ArrayList<Integer> sortedTags = sortByValue(myScore);
+        // System.out.println("Total Number of hashtags scored: " + sortedTags.size());
+        int length = sortedTags.size();
+        System.out.printf("TWEET: %s\nHASHTAGS:\n", tw);
+        for(int i = 0; i<topKHashtags && i<length; i++){
+            System.out.printf("\t%s : %g\n", reverseIndexMap.get(sortedTags.get(i)), myScore.get(sortedTags.get(i)));
+        }  
     }
     
     static void insertTweetsAndFilter() throws FileNotFoundException, IOException{
-        Scanner user_input = new Scanner( System.in );
-        System.out.println("Name of tweetfile: ");
-        String file = user_input.next();
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-        String tw; int ti;
-        while ((line = br.readLine()) != null) {
-            tw = line.split("\",\"")[0].replaceAll("\\.", " ");
-            ti = Integer.parseInt(line.split("\",\"")[1]);
-            fullTweets.add(new TweetPair(tw,ti));
+        String tweetsFile = "tweets";
+        String hashtagFile = "hashtags";
+        BufferedReader tweetsReader;
+        tweetsReader = new BufferedReader(new FileReader(tweetsFile));
+        BufferedReader hashtagsReader;
+        hashtagsReader = new BufferedReader(new FileReader(hashtagFile));
+        String tweetLine, hashtagLine;          
+        int ti;
+        while ((tweetLine = tweetsReader.readLine()) != null) {
+            hashtagLine = hashtagsReader.readLine();
+            tweetLine += hashtagLine;
+            // not considering the time as of now
+            ti = 4;
+            tweetLine = tweetLine.trim();
+            fullTweets.add(new TweetPair(tweetLine,ti));
         }
-        br.close();  
-        filterTweets();
-
-        
+        tweetsReader.close();
+        hashtagsReader.close();  
+        filterTweets();   
     }
     
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
-        filterThreshold = 20;
+        // add everything with any frequency
+        filterThreshold = 0;
         bfsThreshold = 2;
-        PrintStream out = new PrintStream(new FileOutputStream("output.txt"));
-        System.setOut(out);
+        topKHashtags = 5;
+//        PrintStream out = new PrintStream(new FileOutputStream("output.txt"));
+//        System.setOut(out);
         insertTweetsAndFilter();
         insertIntoGraph();
         findConnections();
-        System.out.print("Enter your name: ");
+        System.out.print("\n\n");
  
-      //  open up standard input
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        //TODO  testing on the input file as of now, 5 fold here
+        BufferedReader br = new BufferedReader(new FileReader("tweets"));
 
         String myTweet = null;
 
