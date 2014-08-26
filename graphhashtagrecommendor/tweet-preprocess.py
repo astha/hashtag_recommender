@@ -2,6 +2,8 @@ import re
 import operator
 import numpy as np
 import sys
+# from nltk.stem.snowball import SnowballStemmer
+# stemmer = SnowballStemmer("english")
 
 stopWordListFileName="stopwords.txt"
 hashtagsFileName="hashtags"

@@ -15,7 +15,22 @@ package graphhashtagrecommendor;
 import java.util.*; // For HashMap, HashSet
 
 public final class UndirectedGraph implements Iterable<Integer> {
-    /* A map from nodes in the graph to sets of outgoing edges.  Each
+    /* A map frostatic ArrayList<Integer> sortByValue(Map<Integer, Double> map) {
+        LinkedList<Map.Entry<Integer,Double>> list = new LinkedList(map.entrySet());
+        Collections.sort(list, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return ((Comparable) ((Map.Entry<Integer,Double>) (o2)).getValue())
+                        .compareTo(((Map.Entry<Integer,Double>) (o1)).getValue());
+            }
+        });
+
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            Map.Entry<Integer,Double> entry = (Map.Entry<Integer,Double>)it.next();
+            result.add(entry.getKey());
+        }
+        return result;
+    }m nodes in the graph to sets of outgoing edges.  Each
      * set of edges is represented by a map from edges to doubles.
      */
     double unitWeight;
@@ -107,24 +122,58 @@ public final class UndirectedGraph implements Iterable<Integer> {
     }
     
     void dfs(Integer node, Double score,HashMap<Integer,Double>scoreMap,Integer threshold, Double decayFactor ){
-        if(threshold <= 0){
-            return;
-        }else{
-            String key;
-            Integer mini, maxi;
-            //System.out.println(node+" has "+edgesFrom(node).size()+" edges ");
-            for(Integer m:edgesFrom(node)){
-                mini = Math.min(node,m);
-                maxi = Math.max(node,m);
-                key = Integer.toString(mini)+"#"+ Integer.toString(maxi);
-                if(scoreMap.containsKey(m)){
-                    scoreMap.put(m,scoreMap.get(m)+score*weightGraph.get(key)*decayFactor);
-                }else{
-                    scoreMap.put(m,score*weightGraph.get(key)*decayFactor);
+        ArrayList<Integer> queue = new ArrayList<Integer>();
+        ArrayList<Double> queues = new ArrayList<Double>();
+        Integer mini, maxi;
+        Double nodeScore;
+        String key;
+        queue.add(node);
+        queues.add(score);
+        int start = 0;
+        int end = 0;
+        int added = 1;
+        for(int i = 0; i<threshold; i++){
+            start = end;
+            end += added;
+            added = 0;
+            for(Integer k = start ; k<end; k++){
+                int parent = queue.get(k);
+                nodeScore = queues.get(k);
+                for(Integer m: edgesFrom(parent)){
+                    mini = Math.min(parent,m);
+                    maxi = Math.max(parent,m);
+                    key = Integer.toString(mini)+"#"+ Integer.toString(maxi);
+                    if(scoreMap.containsKey(m)){
+                        scoreMap.put(m,scoreMap.get(m)+nodeScore*weightGraph.get(key)*decayFactor);
+                    }else{
+                        scoreMap.put(m,nodeScore*weightGraph.get(key)*decayFactor);
+                    }
+                    added++;
+                    queue.add(m);
+                    queues.add(nodeScore*weightGraph.get(key)*decayFactor);
                 }
-                dfs(m,score*weightGraph.get(key)*decayFactor,scoreMap,threshold-1,decayFactor);
             }
         }
+
+        
+//        if(threshold <= 0){
+//            return;
+//        }else{
+//            String key;
+//            Integer mini, maxi;
+//            //System.out.println(node+" has "+edgesFrom(node).size()+" edges ");
+//            for(Integer m:edgesFrom(node)){
+//                mini = Math.min(node,m);
+//                maxi = Math.max(node,m);
+//                key = Integer.toString(mini)+"#"+ Integer.toString(maxi);
+//                if(scoreMap.containsKey(m)){
+//                    scoreMap.put(m,scoreMap.get(m)+score*weightGraph.get(key)*decayFactor);
+//                }else{
+//                    scoreMap.put(m,score*weightGraph.get(key)*decayFactor);
+//                }
+//                dfs(m,score*weightGraph.get(key)*decayFactor,scoreMap,threshold-1,decayFactor);
+//            }
+//        }
     }
     
     public void normalize(){

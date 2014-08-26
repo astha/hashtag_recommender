@@ -214,11 +214,11 @@ public class GraphHashtagRecommendor {
         int i;
         for(i = 0; i<sortedTags.size(); i++){
             if(originalTags.contains(reverseIndexMap.get(sortedTags.get(i)))){
-                System.out.println("Found " + reverseIndexMap.get(sortedTags.get(i)));
+                //System.out.println("Found " + reverseIndexMap.get(sortedTags.get(i)));
                 break;
             }
         }
-        if(i == originalTags.size()) return;
+        if(i == sortedTags.size()) return;
         if(i < 5) tagHits[0]++;
         if(i < 10) tagHits[1]++;
         if(i < 15) tagHits[2]++;
@@ -246,10 +246,10 @@ public class GraphHashtagRecommendor {
         for(int i = 0 ; i<4; i++) tagHits[i] = 0;
         System.out.printf("Total Test Tweets = %d\n", fullTweetsTest.size());
         String testTweet;
-        // test on test tweets, five fold
+        // test on test tweets, five fold, change 20 to fullTweetsTest.size()
         for(int i = 0; i<20; i++){
             testTweet = removeHashTagsFromTestTweet(fullTweetsTest.get(i), fullHashtagsTest.get(i));
-            System.out.println(testTweet);
+            // System.out.println(testTweet);
             System.out.printf("Testing Tweet %d\n", i);
             updateHits(giveHashTags(testTweet), fullHashtagsTest.get(i));
         }
