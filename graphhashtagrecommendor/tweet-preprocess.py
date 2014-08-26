@@ -28,16 +28,19 @@ def getStopWords():
 def processTweet(tweet):
     if(not ContainsHashTag(tweet)):
         return None
+    tweet = tweet.lower()
     #Convert www.* or https?://* to URL
     tweet = re.sub('((www\.[\S]+)|(https?://[\S]+))','URL',tweet)
     #Convert @username to null
-    tweet = re.sub('@[\S]+','',tweet)
+    tweet = re.sub('@[\S]+','at_user',tweet)
     #trim the appearing punctuations from begin and end of tweet
-    tweet = tweet.strip('\'"?.,!')
+    tweet = tweet.strip('\'":?.,!')
     # remove punctuation from tweet
-    tweet = re.sub('[?,."!]','',tweet)
+    tweet = re.sub('[?,.:"!]','',tweet)
     #Remove additional white spaces
     tweet = re.sub('[\s]+', ' ', tweet)
+    #Replace non-ascii characters
+    tweet = re.sub(r'[^\x00-\x7F]','', tweet)
     return tweet
 
 def replaceThreeOrMore(word):
@@ -67,7 +70,7 @@ def readSlangDictionary():
 
 def getFeatureWords(tweet):
     featureTweet = ""
-    hashTags = ""
+    hashTags = []
     words = tweet.split()
     for w in words:
         arr=w.split('#')
@@ -99,10 +102,14 @@ def getFeatureWords(tweet):
         # the word is a hashtag
         for index in range(1,len(arr)):
             # will come here iff 'w' is of the type [#sachin, you#sir, you#sir#great]
-            hashTags += " #" + arr[index]
+            hashTags.append("#" + arr[index])
             featureTweet += " " + arr[index]
 
-    return (featureTweet, hashTags)
+    hashTags = [tag for tag in hashTags if re.match('#[\w_-]+', tag)]
+    if len(hashTags) == 0:
+        return (None, None)
+    else:
+        return (featureTweet, ' '.join(hashTags))
 
 
 def initialize():
@@ -123,10 +130,11 @@ def main(argv):
         tweet = processTweet(tweet)
         if tweet is not None:
             (featureTweet, hashtags) = getFeatureWords(tweet)
-            featureTweet += '\n'
-            hashtags += '\n'
-            featureWordsFile.write(featureTweet)
-            hashtagFile.write(hashtags)
+            if hashtags is not None:
+                featureTweet += '\n'
+                hashtags += '\n'
+                featureWordsFile.write(featureTweet)
+                hashtagFile.write(hashtags)
         tweet = fp.readline()
 
 if __name__ == "__main__":
