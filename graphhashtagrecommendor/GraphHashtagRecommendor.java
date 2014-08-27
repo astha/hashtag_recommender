@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -43,6 +44,9 @@ public class GraphHashtagRecommendor {
     static Map<String, Integer> IDF = new HashMap<String, Integer>();
     static Integer[] tagHits = new Integer[4];
     static Integer foldValue = 0;
+    static String tweetsFile = "tweets";
+    static String hashtagFile = "hashtags";
+    static boolean forGroups = false;
 
     static UndirectedGraph tweetGraph;
     
@@ -143,6 +147,7 @@ public class GraphHashtagRecommendor {
     // Use heap to make it fast
     // http://www.michaelpollmeier.com/selecting-top-k-items-from-a-list-efficiently-in-java-groovy/
     static ArrayList<Integer> sortByValue(Map<Integer, Double> map) {
+//        heap = new PriorityQueue<Map.Entry<Integer,Double>>()
         LinkedList<Map.Entry<Integer,Double>> list = new LinkedList(map.entrySet());
         Collections.sort(list, new Comparator() {
             public int compare(Object o1, Object o2) {
@@ -178,12 +183,21 @@ public class GraphHashtagRecommendor {
             }
         }
         myScore = filterScoresForHashtags(myScore);
+        Map.Entry<Integer, Double> maxEntry = null;
+        if(forGroups){
+            //just find the max
+            for (Map.Entry<Integer, Double> entry : myScore.entrySet()){
+                if (maxEntry == null || entry.getValue() >= maxEntry.getValue()){
+                    maxEntry = entry;
+                }
+            }
+            if(maxEntry != null) return new ArrayList<Integer>(Arrays.asList(maxEntry.getKey()));
+            else return new ArrayList<Integer>(Arrays.asList(10));
+        }
         return sortByValue(myScore);
     }
     
     static void insertTweetsAndFilter() throws FileNotFoundException, IOException{
-        String tweetsFile = "tweets";
-        String hashtagFile = "hashtags";
         BufferedReader tweetsReader;
         tweetsReader = new BufferedReader(new FileReader(tweetsFile));
         BufferedReader hashtagsReader;
@@ -212,13 +226,13 @@ public class GraphHashtagRecommendor {
     
     public static void updateHits(ArrayList<Integer> sortedTags, HashSet<String> originalTags) {
         int i;
-        for(i = 0; i<sortedTags.size(); i++){
+        for(i = 0; i<sortedTags.size() && i<20; i++){
             if(originalTags.contains(reverseIndexMap.get(sortedTags.get(i)))){
-                //System.out.println("Found " + reverseIndexMap.get(sortedTags.get(i)));
+                System.out.println("Found " + i + " " + reverseIndexMap.get(sortedTags.get(i)));
                 break;
             }
         }
-        if(i == sortedTags.size()) return;
+        if(i == sortedTags.size() || i >= 20) return;
         if(i < 5) tagHits[0]++;
         if(i < 10) tagHits[1]++;
         if(i < 15) tagHits[2]++;
@@ -233,24 +247,14 @@ public class GraphHashtagRecommendor {
         return tweet;
     }
     
-    // term : any unigram
-    public static double distanceBetweenTerms(String term1, String term2, int threshold){
-        term1 = term1.trim().toLowerCase();
-        term2 = term2.trim().toLowerCase();
-        if(indexMap.containsKey(term1) && indexMap.containsKey(term2)){
-            return tweetGraph.termDistance(indexMap.get(term1),indexMap.get(term2), threshold);
-        }else{
-            System.out.println("These terms don't exist in our graph, sorry about that ;'( !");
-            return 0.0;
-        }
-        
-    }
-    
     public static void main(String[] args) throws IOException {
         filterThreshold = 0;
         foldValue = 0;
         bfsThreshold = 2;
         topKHashtags = 20;
+        tweetsFile = "group_tweets";
+        hashtagFile = "group_tags";
+        forGroups = true;
 
         insertTweetsAndFilter();
         insertIntoGraph();
@@ -260,7 +264,7 @@ public class GraphHashtagRecommendor {
         System.out.printf("Total Test Tweets = %d\n", fullTweetsTest.size());
         String testTweet;
         // test on test tweets, five fold, change 20 to fullTweetsTest.size()
-        for(int i = 0; i<20; i++){
+        for(int i = 0; i<fullTweetsTest.size(); i++){
             testTweet = removeHashTagsFromTestTweet(fullTweetsTest.get(i), fullHashtagsTest.get(i));
             // System.out.println(testTweet);
             System.out.printf("Testing Tweet %d\n", i);

@@ -34,10 +34,8 @@ public final class UndirectedGraph implements Iterable<Integer> {
      * set of edges is represented by a map from edges to doubles.
      */
     double unitWeight;
-    double dFactor;
     public UndirectedGraph(){
         unitWeight = 1.0;
-        dFactor = 0.5;
     }
     
     private final Map<Integer, Set<Integer>> mGraph = new HashMap<Integer, Set<Integer>>();
@@ -120,17 +118,7 @@ public final class UndirectedGraph implements Iterable<Integer> {
     
     public void scoreTerm(Integer nodeNum, HashMap<Integer,Double>score, Integer threshold){
         //System.out.println("Called for "+nodeNum);
-        dfs(nodeNum,1.0,score,threshold,dFactor);
-    }
-    
-    Double termDistance(int index1, int index2, int threshold){
-        HashMap<Integer,Double> score = new HashMap<>();
-        dfs(index1,1.0,score,threshold,dFactor);
-        if(score.containsKey(index2)){
-            return score.get(index2);
-        }else{
-            return 0.0;
-        }
+        dfs(nodeNum,1.0,score,threshold,0.5);
     }
     
     void dfs(Integer node, Double score,HashMap<Integer,Double>scoreMap,Integer threshold, Double decayFactor ){
