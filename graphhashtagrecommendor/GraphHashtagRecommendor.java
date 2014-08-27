@@ -233,6 +233,19 @@ public class GraphHashtagRecommendor {
         return tweet;
     }
     
+    // term : any unigram
+    public static double distanceBetweenTerms(String term1, String term2, int threshold){
+        term1 = term1.trim().toLowerCase();
+        term2 = term2.trim().toLowerCase();
+        if(indexMap.containsKey(term1) && indexMap.containsKey(term2)){
+            return tweetGraph.termDistance(indexMap.get(term1),indexMap.get(term2), threshold);
+        }else{
+            System.out.println("These terms don't exist in our graph, sorry about that ;'( !");
+            return 0.0;
+        }
+        
+    }
+    
     public static void main(String[] args) throws IOException {
         filterThreshold = 0;
         foldValue = 0;
