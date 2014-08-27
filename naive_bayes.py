@@ -19,26 +19,26 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHa
   smoothingFactor = 0.001
   vocabSet = set(vocabulary.keys())
 
-
   recommendationScore = 0
   for i in range(len(testTweets)):
     testFeature = testTweets[i]
-    featureVector = [0]*vocabSize
     hashtagProbMap = {}
     restWords = vocabSet - set(testFeature)
     for tag in hashtagFreqMap.keys():
       hashtagProbMap[tag] = float(hashtagFreqMap[tag])/totalFreq #Prior Probability
+
+      # consider probability for words present in tweet  
       for word in testFeature:
-        if hashtagProbMap[tag] ==  0:
-          print word
-          exit(0)
+        # ignore new words
         if vocabulary.has_key(word):
           freq = hashtagToWordFreq[tag][vocabulary[word]]
           if freq != 0:
             hashtagProbMap[tag] *= float(freq) / hashtagFreqMap[tag]
-          else:
+          else: 
+            # if word never occured with the hashtag, consider probability of occurance of the word
             hashtagProbMap[tag] *=  float(wordFreqMap[word]) / totalVocabFreq
       
+      # consider probability for words not present in the tweet
       for word in restWords:
         freq = hashtagToWordFreq[tag][vocabulary[word]]
         if freq / hashtagFreqMap[tag] == 1:
@@ -55,8 +55,6 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHa
     # print "-------------------\n"
     recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
   return float(recommendationScore * 100)/len(testHashtags)
-
-
 
 
 # NLTK Naive Bayes 

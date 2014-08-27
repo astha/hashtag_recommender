@@ -104,7 +104,7 @@ def getVocabulary(features):
   vocabCount = 0
   for feature in features:
     for word in feature:
-      if not word in vocabulary.keys():
+      if not vocabulary.has_key(word):
         vocabulary[word] = vocabCount
         vocabCount += 1
   return vocabulary
