@@ -4,6 +4,7 @@ import operator
 from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 import copy
 import sys
+import heapq
 
 space=" "
 endl = "\n"
@@ -134,8 +135,10 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 		if rankApproach == 1: #tweetScoreBased
 			finalTags = tweetScoreBased(closenessScores, processedHashTags, k)
 		else:
-			relevantTweets = sorted(closenessScores.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
-			relevantTags = [processedHashTags[index] for (index,score) in relevantTweets]
+
+			relevantTweets = heapq.nlargest(k, closenessScores, key=closenessScores.get)
+
+			relevantTags = [processedHashTags[index] for index in relevantTweets]
 			relevantTags = [item for sublist in relevantTags for item in sublist]
 		
 			if rankApproach == 2: #localFrequencyRanking
@@ -152,9 +155,9 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 	
 # Ranking methods 
 def tweetScoreBased(closenessScores, processedHashTags, k):
-	relevantTweets = sorted(closenessScores.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
+	relevantTweets = heapq.nlargest(k, closenessScores, key=closenessScores.get)
 	# print relevantTweets
-	relevantTags = [processedHashTags[index] for (index,score) in relevantTweets]
+	relevantTags = [processedHashTags[index] for index in relevantTweets]
 	relevantTags = [item for sublist in relevantTags for item in sublist]
 	# take first k hashtags without changing the order
 	tempHashtagSet = set()
@@ -172,15 +175,15 @@ def localFrequencyRanking(relevantTags, k):
 			freqMap[tag] += 1
 		else :
 			freqMap[tag] = 1
-	sortedTags = sorted(freqMap.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
-	return [ tag for tag,freq in sortedTags]
+	sortedTags = heapq.nlargest(k, freqMap, key=freqMap.get)
+	return sortedTags
 
 def globalFrequencyRanking(relevantTags, hashtagFreqMap, k):
 	freqMap = {}
 	for tag in relevantTags:
 		freqMap[tag] = hashtagFreqMap[tag]
-	sortedTags = sorted(freqMap.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
-	return [ tag for tag,freq in sortedTags]
+	sortedTags = heapq.nlargest(k, freqMap, key=freqMap.get)
+	return sortedTags
 
 rankRecommendationMap=[]
 def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
@@ -194,7 +197,7 @@ def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 def fiveFoldValidation():	
 	total = len(processedTweets)
 
-	# k = int(sys.argv[4])	
+	k = int(sys.argv[4])	
 	# global rankRecommendationMap
 	# rankRecommendationMap=[0]*(k+2)
 
@@ -221,20 +224,20 @@ def fiveFoldValidation():
 			testHashtags.append(ele)
 
 	#/* Following for Singham classifier
-		# featureVecApproach = str(sys.argv[2])
-		# rankApproach = int(sys.argv[3])
+		featureVecApproach = str(sys.argv[2])
+		rankApproach = int(sys.argv[3])
 		
-		# recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
+		recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
 	#*/
 
 	#/* Following for Naive Bayes
-		k = int(sys.argv[2])
-		recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
+		# k = int(sys.argv[2])
+		# recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
 	#*/
 		scoreList.append(recommendationScore)
 	
-	# print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
-	print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
+	print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
+	# print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
 	# print rankRecommendationMap
 
 preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets

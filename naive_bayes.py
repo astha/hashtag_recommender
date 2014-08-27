@@ -2,6 +2,7 @@ import nltk
 import operator
 import copy
 from common_functions import *
+import heapq
 
 # Naive Bayes Self Implementation
 def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHashtags,k):
@@ -47,9 +48,12 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHa
           hashtagProbMap[tag] *= (1 - (float(freq) / hashtagFreqMap[tag]))
 
     print "sorting begin.."
-    topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
+    # topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
+
+    topKpairs = heapq.nlargest(k, hashtagProbMap, key=hashtagProbMap.get)
+
     print "sorting ends"
-    finalTags = [tag for tag,prob in reversed(topKpairs)]
+    finalTags = topKpairs
     # print testFeature
     # print [(tag,str(prob)) for tag,prob in reversed(topKpairs)]
     # print "-------------------\n"
@@ -97,12 +101,10 @@ def naiveBayesClassifier(processedHashTags, processedTweets, testTweets):
     hashtagProb = {}
     for ht in allHashTags:
       hashtagProb[ht] = pdist.prob(ht)
-    sortedProbs = sorted(hashtagProb.iteritems(), key=operator.itemgetter(1))
+    # sortedProbs = sorted(hashtagProb.iteritems(), key=operator.itemgetter(1))
+    sortedProbs = heapq.nlargest(k, hashtagProb, key=hashtagProb.get)
 
-    bestMatch = reversed(sortedProbs[-5:])
-    bestMatch = [i[0] for i in bestMatch]
     print tweet
-    print bestMatch
-    print sortedProbs[-5:]
+    print sortedProbs
     
     print "\n--------------------\n"
