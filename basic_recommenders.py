@@ -13,7 +13,6 @@ from naive_bayes import *
 # from nltk.stem.snowball import SnowballStemmer
 # stemmer = SnowballStemmer("english")
 
-
 processedHashTags = []
 processedTweets = []
 
@@ -46,8 +45,6 @@ def createTFIDFFeatureVectors(features):
 	transformer = TfidfTransformer()
 	tfidf_features = transformer.fit_transform(tf_features).toarray()
 	return tfidf_features,vocabulary
-
-
 
 tarr = []
 filename = sys.argv[1]
@@ -97,6 +94,23 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 		featureVectors, vocabulary = createTFFeatureVectors(processedTweets)
 	else:
 		print "boss ! look @ featurevec approach ! :/"
+		print """Let me know if this is a lot of work. I would love to do it myself instead of monitoring and 
+			querying people if they have done their part or not and whether they are facing some problems. 
+			I distribute the work because, 
+			a) No one else(I mean it) steps forward and takes the initiative to lead the team. People tend to 
+			 wrap up shit at the end time and I do not like it. I like to put my full effort and the result, 
+			 as always depends on luck.
+			b) Some people tend to blame one for doing everything and not letting them know that he has already
+			 completed it.
+
+			 PS. I truly do not want to be any sort of leader/boss. I would love to do the job assigned to me 
+			 and chill out and let the other guy worry about how to integrate and present my shit. 
+
+			 PPS. I seriously do not like reminding people about their work again and again. It is irritating for both.
+			 That is why I sometimes ask one member to remind the other member and keep myself totally out of the loop. 
+
+			 PPPS. I am not in a bad mood or out of my mind. These are just some relevant points that I felt everyone should know and 
+			 they are true in general for any responsible leader. Chill."""
 		exit(0)
 
 	relevanceThreshold = 0
@@ -168,14 +182,6 @@ def globalFrequencyRanking(relevantTags, hashtagFreqMap, k):
 	sortedTags = sorted(freqMap.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
 	return [ tag for tag,freq in sortedTags]
 
-def compareHashtagsForTweet(actualTweetHashtags, recommendedTweetHashtags):
-	if len(set(actualTweetHashtags) & set(recommendedTweetHashtags)):
-		return True 
-	else:
-		return False
-
-
-
 rankRecommendationMap=[]
 def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 	global rankRecommendationMap
@@ -185,17 +191,12 @@ def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 		else:
 			rankRecommendationMap[len(rankRecommendationMap)-1] += 1
 
-
-
-
-def fiveFoldValidation():
-	preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
-	
+def fiveFoldValidation():	
 	total = len(processedTweets)
 
 	k = int(sys.argv[4])
-	global rankRecommendationMap
-	rankRecommendationMap=[0]*(k+2)
+	# global rankRecommendationMap
+	# rankRecommendationMap=[0]*(k+2)
 
 	scoreList = []
 	for i in range(2,4):
@@ -236,4 +237,7 @@ def fiveFoldValidation():
 	# print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
 	# print rankRecommendationMap
 
+preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
+# hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
+# plotHashtagFreqDistribution(hashtagFreqMap)
 fiveFoldValidation()

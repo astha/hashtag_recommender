@@ -44,9 +44,9 @@ def processTweet(tweet):
     #Convert @username to AT_USER
     tweet = re.sub('@[\S]+','AT_USER',tweet)
     #trim the appearing punctuations from begin and end of tweet
-    tweet = tweet.strip('\'"?.,!')
+    tweet = tweet.strip('\'"?.,\!')
     # remove punctuation from tweet
-    tweet = re.sub('[?,.:;-~\'"!]','',tweet)
+    tweet = re.sub('[?,.:;-~\'"\!]','',tweet)
     #Remove additional white spaces
     tweet = re.sub('[\s]+', ' ', tweet)
     return tweet
