@@ -74,7 +74,7 @@ def getFeatures(tweet):
       #replace two or more with one occurrence
       w = replaceThreeOrMore(arr[0])
       #strip punctuation
-      w = w.strip('\'"?,.-')
+      w = w.strip('\'"?,.-*;')
       #the word should start with alphabet or it should be a hashtag
       val = re.search(r"(^[#a-zA-Z])", w)
       w = w.lower()
