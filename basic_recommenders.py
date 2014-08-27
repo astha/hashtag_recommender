@@ -95,23 +95,6 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 		featureVectors, vocabulary = createTFFeatureVectors(processedTweets)
 	else:
 		print "boss ! look @ featurevec approach ! :/"
-		print """Let me know if this is a lot of work. I would love to do it myself instead of monitoring and 
-			querying people if they have done their part or not and whether they are facing some problems. 
-			I distribute the work because, 
-			a) No one else(I mean it) steps forward and takes the initiative to lead the team. People tend to 
-			 wrap up shit at the end time and I do not like it. I like to put my full effort and the result, 
-			 as always depends on luck.
-			b) Some people tend to blame one for doing everything and not letting them know that he has already
-			 completed it.
-
-			 PS. I truly do not want to be any sort of leader/boss. I would love to do the job assigned to me 
-			 and chill out and let the other guy worry about how to integrate and present my shit. 
-
-			 PPS. I seriously do not like reminding people about their work again and again. It is irritating for both.
-			 That is why I sometimes ask one member to remind the other member and keep myself totally out of the loop. 
-
-			 PPPS. I am not in a bad mood or out of my mind. These are just some relevant points that I felt everyone should know and 
-			 they are true in general for any responsible leader. Chill."""
 		exit(0)
 
 	relevanceThreshold = 0
