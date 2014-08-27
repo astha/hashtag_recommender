@@ -52,7 +52,7 @@ def processTweet(tweet):
   #trim the appearing punctuations from begin and end of tweet
   tweet = tweet.strip('\'"?.,!')
   # remove punctuation from tweet
-  tweet = re.sub('[?,."!]','',tweet)
+  tweet = re.sub('[-\'"]','',tweet)
   #Remove additional white spaces
   tweet = re.sub('[\s]+', ' ', tweet)
   return tweet
@@ -69,7 +69,9 @@ def readSlangDictionary():
 
 def getFeatures(tweet):
   featureVector = []
-  words = tweet.split()
+  # print tweet
+  tweet = tweet.replace('\\', ' ')
+  words = re.split('[?,.;:~"* !/]+', tweet)
   for w in words:
 
     arr=w.split('#')

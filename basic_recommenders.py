@@ -38,7 +38,7 @@ def createTFFeatureVectors(features):
 # tfidf feature vector
 def createTFIDFFeatureVectors(features):
 	vectorizer = CountVectorizer()
-	print features
+	# print features
 	textFeatures = [' '.join(feature) for feature in features]
 	tf_features = vectorizer.fit_transform(textFeatures).toarray()
 	vocabulary = vectorizer.vocabulary_
@@ -199,7 +199,7 @@ def fiveFoldValidation():
 	# rankRecommendationMap=[0]*(k+2)
 
 	scoreList = []
-	for i in range(2,4):
+	for i in range(2,3):
 		j=i
 		# print j
 		trainingTweets=[]
