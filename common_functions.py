@@ -52,7 +52,7 @@ def processTweet(tweet):
   #trim the appearing punctuations from begin and end of tweet
   tweet = tweet.strip('\'"?.,!')
   # remove punctuation from tweet
-  tweet = re.sub('[?,."!]','',tweet)
+  tweet = re.sub('[-\'"]','',tweet)
   #Remove additional white spaces
   tweet = re.sub('[\s]+', ' ', tweet)
   return tweet
@@ -69,7 +69,9 @@ def readSlangDictionary():
 
 def getFeatures(tweet):
   featureVector = []
-  words = tweet.split()
+  # print tweet
+  tweet = tweet.replace('\\', ' ')
+  words = re.split('[?,.;:~"* !/]+', tweet)
   for w in words:
 
     arr=w.split('#')
@@ -77,7 +79,7 @@ def getFeatures(tweet):
       #replace two or more with one occurrence
       w = replaceThreeOrMore(arr[0])
       #strip punctuation
-      w = w.strip('\'"?,.-')
+      w = w.strip('\'"?,.-*;')
       #the word should start with alphabet or it should be a hashtag
       val = re.search(r"(^[#a-zA-Z])", w)
       w = w.lower()
@@ -102,7 +104,7 @@ def getVocabulary(features):
   vocabCount = 0
   for feature in features:
     for word in feature:
-      if not word in vocabulary.keys():
+      if not vocabulary.has_key(word):
         vocabulary[word] = vocabCount
         vocabCount += 1
   return vocabulary

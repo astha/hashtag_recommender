@@ -2,39 +2,44 @@ import nltk
 import operator
 import copy
 from common_functions import *
+import heapq
 
 # Naive Bayes Self Implementation
 def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHashtags,k):
+  print "hashTagMaps start"
   hashtagFreqMap, hashtagToWordFreq = hashTagMaps(processedTweets, processedHashTags)
+  print "hashTagMaps done, both :) "
+  print "Now, getting onto word frequency"
   wordFreqMap = getWordFrequency(processedTweets)
+  print "Done. ! Moving on to get vocabulary"
   vocabulary = getVocabulary(processedTweets)
+  print "Hey ! cheer up. vocabulary is done. "
   vocabSize = len(vocabulary.keys())
   totalFreq = sum(hashtagFreqMap.values())
   totalVocabFreq = sum(wordFreqMap.values())
   smoothingFactor = 0.001
   vocabSet = set(vocabulary.keys())
 
-
-  vocabulary = getVocabulary(processedTweets)
   recommendationScore = 0
   for i in range(len(testTweets)):
     testFeature = testTweets[i]
-    featureVector = [0]*vocabSize
     hashtagProbMap = {}
     restWords = vocabSet - set(testFeature)
     for tag in hashtagFreqMap.keys():
       hashtagProbMap[tag] = float(hashtagFreqMap[tag])/totalFreq #Prior Probability
+
+      # consider probability for words present in tweet  
       for word in testFeature:
-        if hashtagProbMap[tag] ==  0:
-          print word
-          exit(0)
+        # ignore new words
         if vocabulary.has_key(word):
           freq = hashtagToWordFreq[tag][vocabulary[word]]
           if freq != 0:
             hashtagProbMap[tag] *= float(freq) / hashtagFreqMap[tag]
-          else:
+          else: 
+            # if word never occured with the hashtag, consider probability of occurance of the word
             hashtagProbMap[tag] *=  float(wordFreqMap[word]) / totalVocabFreq
       
+      # consider probability for words not present in the tweet
       for word in restWords:
         freq = hashtagToWordFreq[tag][vocabulary[word]]
         if freq / hashtagFreqMap[tag] == 1:
@@ -42,15 +47,18 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHa
         else:
           hashtagProbMap[tag] *= (1 - (float(freq) / hashtagFreqMap[tag]))
 
-    topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
-    finalTags = [tag for tag,prob in reversed(topKpairs)]
+    print "sorting begin.."
+    # topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
+
+    topKpairs = heapq.nlargest(k, hashtagProbMap, key=hashtagProbMap.get)
+
+    print "sorting ends"
+    finalTags = topKpairs
     # print testFeature
     # print [(tag,str(prob)) for tag,prob in reversed(topKpairs)]
     # print "-------------------\n"
     recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
   return float(recommendationScore * 100)/len(testHashtags)
-
-
 
 
 # NLTK Naive Bayes 
@@ -93,12 +101,10 @@ def naiveBayesClassifier(processedHashTags, processedTweets, testTweets):
     hashtagProb = {}
     for ht in allHashTags:
       hashtagProb[ht] = pdist.prob(ht)
-    sortedProbs = sorted(hashtagProb.iteritems(), key=operator.itemgetter(1))
+    # sortedProbs = sorted(hashtagProb.iteritems(), key=operator.itemgetter(1))
+    sortedProbs = heapq.nlargest(k, hashtagProb, key=hashtagProb.get)
 
-    bestMatch = reversed(sortedProbs[-5:])
-    bestMatch = [i[0] for i in bestMatch]
     print tweet
-    print bestMatch
-    print sortedProbs[-5:]
+    print sortedProbs
     
     print "\n--------------------\n"

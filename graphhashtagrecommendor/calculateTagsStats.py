@@ -36,6 +36,8 @@ def main(argv):
         if value >= 2:
             twoOrMore += 1
         if value == 1:
+            # print [x for (x,y) in sorted_tags[index:]]
+            # exit(0)
             Unique = totalTags - index
             break
         index += 1
@@ -61,3 +63,15 @@ if __name__ == "__main__":
 # Tags with frequency >= 5: 863
 # Tags with frequency >= 2: 2458
 # Unique Tags: 6250
+
+
+#for multi
+# --------------
+# Total Tags: 2458
+# Tags with frequency >= 30:  122
+# Tags with frequency >= 20:  191
+# Tags with frequency >= 10:  406
+# Tags with frequency >= 5: 865
+# Tags with frequency >= 2: 2458
+# Unique Tags: 0
+

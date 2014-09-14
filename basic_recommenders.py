@@ -4,6 +4,7 @@ import operator
 from sklearn.feature_extraction.text import CountVectorizer,TfidfTransformer
 import copy
 import sys
+import heapq
 
 space=" "
 endl = "\n"
@@ -38,6 +39,7 @@ def createTFFeatureVectors(features):
 # tfidf feature vector
 def createTFIDFFeatureVectors(features):
 	vectorizer = CountVectorizer()
+	# print features
 	textFeatures = [' '.join(feature) for feature in features]
 	tf_features = vectorizer.fit_transform(textFeatures).toarray()
 	vocabulary = vectorizer.vocabulary_
@@ -55,10 +57,7 @@ while line:
 fp.close()
 
 def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
-	# print "Pre Processing Begins...", endl
 	initialize()
-	# hashtagFile = open(hashtagFileName,'w')
-	# wordsFile = open(wordsFileName,'w')
 	global processedHashTags, processedTweets
 	processedTweets = [];
 	processedHashTags = [];
@@ -74,13 +73,16 @@ def preProcessAllTweets(tweetArray, hashtagFileName, wordsFileName):
 
 		processedHashTags.append(hashtagList)
 		processedTweets.append(feature)	
-	# hashtagFile.close()
-	# wordsFile.close()
-	# print "Pre Processing ends..", endl
+
+	hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
+	for tagList in processedHashTags:
+		for tag in tagList:
+			if (hashtagFreqMap[tag] <= 5):
+				tagList.remove(tag)
 
 
-def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashtags,
-						rankApproach, featureVecApproach, k):
+
+def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashtags, rankApproach, featureVecApproach, k):
 
 	featureVectors=[]
 	vocabulary={}
@@ -93,23 +95,6 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 		featureVectors, vocabulary = createTFFeatureVectors(processedTweets)
 	else:
 		print "boss ! look @ featurevec approach ! :/"
-		print """Let me know if this is a lot of work. I would love to do it myself instead of monitoring and 
-			querying people if they have done their part or not and whether they are facing some problems. 
-			I distribute the work because, 
-			a) No one else(I mean it) steps forward and takes the initiative to lead the team. People tend to 
-			 wrap up shit at the end time and I do not like it. I like to put my full effort and the result, 
-			 as always depends on luck.
-			b) Some people tend to blame one for doing everything and not letting them know that he has already
-			 completed it.
-
-			 PS. I truly do not want to be any sort of leader/boss. I would love to do the job assigned to me 
-			 and chill out and let the other guy worry about how to integrate and present my shit. 
-
-			 PPS. I seriously do not like reminding people about their work again and again. It is irritating for both.
-			 That is why I sometimes ask one member to remind the other member and keep myself totally out of the loop. 
-
-			 PPPS. I am not in a bad mood or out of my mind. These are just some relevant points that I felt everyone should know and 
-			 they are true in general for any responsible leader. Chill."""
 		exit(0)
 
 	relevanceThreshold = 0
@@ -133,8 +118,10 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 		if rankApproach == 1: #tweetScoreBased
 			finalTags = tweetScoreBased(closenessScores, processedHashTags, k)
 		else:
-			relevantTweets = sorted(closenessScores.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
-			relevantTags = [processedHashTags[index] for (index,score) in relevantTweets]
+
+			relevantTweets = heapq.nlargest(k, closenessScores, key=closenessScores.get)
+
+			relevantTags = [processedHashTags[index] for index in relevantTweets]
 			relevantTags = [item for sublist in relevantTags for item in sublist]
 		
 			if rankApproach == 2: #localFrequencyRanking
@@ -144,17 +131,16 @@ def singhamClassifier(processedTweets, processedHashTags, testTweets, testHashta
 				hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
 				finalTags = globalFrequencyRanking(relevantTags,hashtagFreqMap, k)
 
-		# recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
-		rankRecommendation(testHashtags[i], finalTags) # updates rank recommendation map
-	# return float(recommendationScore * 100)/len(testHashtags)
-	return 0
+		recommendationScore += compareHashtagsForTweet(testHashtags[i], finalTags)
+		# rankRecommendation(testHashtags[i], finalTags) # updates rank recommendation map
+	return float(recommendationScore * 100)/len(testHashtags)
+	# return 0
 	
 # Ranking methods 
-
 def tweetScoreBased(closenessScores, processedHashTags, k):
-	relevantTweets = sorted(closenessScores.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
+	relevantTweets = heapq.nlargest(k, closenessScores, key=closenessScores.get)
 	# print relevantTweets
-	relevantTags = [processedHashTags[index] for (index,score) in relevantTweets]
+	relevantTags = [processedHashTags[index] for index in relevantTweets]
 	relevantTags = [item for sublist in relevantTags for item in sublist]
 	# take first k hashtags without changing the order
 	tempHashtagSet = set()
@@ -172,15 +158,15 @@ def localFrequencyRanking(relevantTags, k):
 			freqMap[tag] += 1
 		else :
 			freqMap[tag] = 1
-	sortedTags = sorted(freqMap.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
-	return [ tag for tag,freq in sortedTags]
+	sortedTags = heapq.nlargest(k, freqMap, key=freqMap.get)
+	return sortedTags
 
 def globalFrequencyRanking(relevantTags, hashtagFreqMap, k):
 	freqMap = {}
 	for tag in relevantTags:
 		freqMap[tag] = hashtagFreqMap[tag]
-	sortedTags = sorted(freqMap.iteritems(), key=operator.itemgetter(1), reverse=True)[:k]
-	return [ tag for tag,freq in sortedTags]
+	sortedTags = heapq.nlargest(k, freqMap, key=freqMap.get)
+	return sortedTags
 
 rankRecommendationMap=[]
 def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
@@ -193,10 +179,15 @@ def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 
 def fiveFoldValidation():	
 	total = len(processedTweets)
+
+	k = int(sys.argv[4])	
+	# global rankRecommendationMap
+	# rankRecommendationMap=[0]*(k+2)
+
 	scoreList = []
-	for i in range(0,5):
+	for i in range(2,3):
 		j=i
-		print j
+		# print j
 		trainingTweets=[]
 		trainingHashTags=[]
 		testTweets = []
@@ -218,9 +209,7 @@ def fiveFoldValidation():
 	#/* Following for Singham classifier
 		featureVecApproach = str(sys.argv[2])
 		rankApproach = int(sys.argv[3])
-		k = int(sys.argv[4])
-		global rankRecommendationMap
-		rankRecommendationMap=[0]*(k+2)
+		
 		recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
 	#*/
 
@@ -230,9 +219,9 @@ def fiveFoldValidation():
 	#*/
 		scoreList.append(recommendationScore)
 	
-	# print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
+	print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
 	# print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
-	print rankRecommendationMap
+	# print rankRecommendationMap
 
 preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets
 # hashtagFreqMap = calculateHashtagFrequency(processedHashTags)
