@@ -264,6 +264,7 @@ public class GraphHashtagRecommendor {
         
         for(int i = 0 ; i<4; i++) tagHits[i] = 0;
         System.out.printf("Total Test Tweets = %d\n", fullTweetsTest.size());
+    	System.out.printf("Total nodes = %d\n", tweetGraph.size());
         String testTweet;
         // test on test tweets, five fold, change 20 to fullTweetsTest.size()
         for(int i = 0; i<fullTweetsTest.size(); i++){
