@@ -197,7 +197,7 @@ def rankRecommendation(actualTweetHashtags, recommendedTweetHashtags):
 def fiveFoldValidation():	
 	total = len(processedTweets)
 
-	k = int(sys.argv[4])	
+	# k = int(sys.argv[4])	
 	# global rankRecommendationMap
 	# rankRecommendationMap=[0]*(k+2)
 
@@ -224,20 +224,20 @@ def fiveFoldValidation():
 			testHashtags.append(ele)
 
 	#/* Following for Singham classifier
-		featureVecApproach = str(sys.argv[2])
-		rankApproach = int(sys.argv[3])
+		# featureVecApproach = str(sys.argv[2])
+		# rankApproach = int(sys.argv[3])
 		
-		recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
+		# recommendationScore = singhamClassifier(trainingTweets, trainingHashTags, testTweets, testHashtags,rankApproach, featureVecApproach, k)
 	#*/
 
 	#/* Following for Naive Bayes
-		# k = int(sys.argv[2])
-		# recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
+		k = int(sys.argv[2])
+		recommendationScore = naiveBayesRecommender(trainingTweets, trainingHashTags, testTweets, testHashtags, k)
 	#*/
 		scoreList.append(recommendationScore)
 	
-	print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
-	# print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
+	# print str(sys.argv[2]), str(int(sys.argv[3])), str(int(sys.argv[4])), str(float(sum(scoreList))/len(scoreList))
+	print str(sys.argv[2]), str(float(sum(scoreList))/len(scoreList))
 	# print rankRecommendationMap
 
 preProcessAllTweets(tarr,"h.txt","w.txt") #sets the processedHashTags and processedTweets

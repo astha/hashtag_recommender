@@ -6,14 +6,14 @@ import heapq
 
 # Naive Bayes Self Implementation
 def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHashtags,k):
-  print "hashTagMaps start"
+  # print "hashTagMaps start"
   hashtagFreqMap, hashtagToWordFreq = hashTagMaps(processedTweets, processedHashTags)
-  print "hashTagMaps done, both :) "
-  print "Now, getting onto word frequency"
+  # print "hashTagMaps done, both :) "
+  # print "Now, getting onto word frequency"
   wordFreqMap = getWordFrequency(processedTweets)
-  print "Done. ! Moving on to get vocabulary"
+  # print "Done. ! Moving on to get vocabulary"
   vocabulary = getVocabulary(processedTweets)
-  print "Hey ! cheer up. vocabulary is done. "
+  # print "Hey ! cheer up. vocabulary is done. "
   vocabSize = len(vocabulary.keys())
   totalFreq = sum(hashtagFreqMap.values())
   totalVocabFreq = sum(wordFreqMap.values())
@@ -47,12 +47,12 @@ def naiveBayesRecommender(processedTweets, processedHashTags, testTweets, testHa
         else:
           hashtagProbMap[tag] *= (1 - (float(freq) / hashtagFreqMap[tag]))
 
-    print "sorting begin.."
+    # print "sorting begin.."
     # topKpairs = sorted(hashtagProbMap.iteritems(), key=operator.itemgetter(1))[-k:]
 
     topKpairs = heapq.nlargest(k, hashtagProbMap, key=hashtagProbMap.get)
 
-    print "sorting ends"
+    # print "sorting ends"
     finalTags = topKpairs
     # print testFeature
     # print [(tag,str(prob)) for tag,prob in reversed(topKpairs)]
