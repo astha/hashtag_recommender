@@ -1,8 +1,8 @@
 import sys
 import re
+from nltk.corpus import stopwords
 # Returns a list of common english terms (words)
-def InitializeWords():
-    wordlist = str(sys.argv[1]) # A file containing common english words
+def InitializeWords(wordlist):
     content = None
     with open(wordlist) as f:
         content = f.readlines()
@@ -46,7 +46,26 @@ def splitHashtag(hashtag, wordlist):
     else:
         return ParseTag(hashtag.lower(), wordlist)
 
-# awesome-dayofmylife because #iamgreat
-wordlist = InitializeWords()
-hashtag = "#iamgreat"
-print splitHashtag(hashtag, wordlist)
+def main(args):
+	stops = set(stopwords.words('english')+['I'])
+	a=open(args[0])
+	blines=a.readlines()
+	a.close()
+	n=open(args[1],'w');
+	wordlist = InitializeWords("wordlist.txt")
+	for line in blines:
+		brokenHashtag = splitHashtag(line.strip(), wordlist)
+		processedBrokenTag = ""
+		for word in brokenHashtag:
+			if word not in stops:
+				processedBrokenTag += " " + word
+		n.write(processedBrokenTag.strip() + "\n")
+
+def main1(args):
+	hashtag = "#iamgreat"
+	wordlist = InitializeWords("wordlist.txt")
+	print splitHashtag(hashtag, wordlist)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
