@@ -4,6 +4,7 @@ import sys
 def main(argv):
     hashTags = {}
     hashtagFile = open(argv[0],'r')
+    # uniqueTagsFile = open("uniqueTags", 'w')
     line = hashtagFile.readline()
     while line:
         line = line.strip(' \n')
@@ -36,6 +37,9 @@ def main(argv):
         if value >= 2:
             twoOrMore += 1
         if value == 1:
+            # for (x,y) in sorted_tags[index:]:
+            #     uniqueTagsFile.write(x+'\n')
+            # exit(0)
             # print [x for (x,y) in sorted_tags[index:]]
             # exit(0)
             Unique = totalTags - index
